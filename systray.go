@@ -61,6 +61,40 @@ type MenuItem struct {
 	checkType CheckType
 	// parent item, for sub menus
 	parent *MenuItem
+	// parent group, for radio buttons
+	parentGroup *MenuItemRadioGroup
+	groupIdx    int
+}
+
+type MenuItemRadioGroup struct {
+	// ClickedCh is the channel which will be notified when any of the group items is clicked
+	// each channel message will contain the index of the clicked item
+	ClickedCh  chan int
+	items      []*MenuItem
+	checkedIdx int
+}
+
+func (group *MenuItemRadioGroup) AddItem(title string, tooltip string) *MenuItem {
+	item := newMenuItem(title, tooltip, nil)
+	item.isCheckable = true
+	item.checkType = CTRadioButton
+	item.parentGroup = group
+	item.update()
+
+	itemIdx := len(group.items)
+	group.items = append(group.items, item)
+	item.groupIdx = itemIdx
+
+	return item
+}
+
+func (group *MenuItemRadioGroup) Check(idx int) {
+	if idx < 0 || idx >= len(group.items) {
+		return
+	}
+	group.items[group.checkedIdx].checked = false
+	group.checkedIdx = idx
+	group.items[group.checkedIdx].checked = true
 }
 
 func (item *MenuItem) String() string {
@@ -164,13 +198,8 @@ func AddMenuItemCheckbox(title string, tooltip string, checked bool) *MenuItem {
 	return item
 }
 
-func AddMenuItemRadio(title string, tooltip string, checked bool) *MenuItem {
-	item := newMenuItem(title, tooltip, nil)
-	item.isCheckable = true
-	item.checkType = CTRadioButton
-	item.checked = checked
-	item.update()
-	return item
+func AddMenuItemRadioGroup() *MenuItemRadioGroup {
+	return &MenuItemRadioGroup{}
 }
 
 // AddSeparator adds a separator bar to the menu
@@ -256,15 +285,20 @@ func (item *MenuItem) Checked() bool {
 }
 
 // Check a menu item regardless if it's previously checked or not
+// (does nothing for radio button items - these are checked via their group)
 func (item *MenuItem) Check() {
-	item.checked = true
-	item.update()
+	if item.checkType == CTCheckMark {
+		item.checked = true
+		item.update()
+	}
 }
 
 // Uncheck a menu item regardless if it's previously unchecked or not
 func (item *MenuItem) Uncheck() {
-	item.checked = false
-	item.update()
+	if item.checkType == CTCheckMark {
+		item.checked = false
+		item.update()
+	}
 }
 
 // update propagates changes on a menu item to systray
@@ -283,6 +317,15 @@ func systrayMenuItemSelected(id uint32) {
 		log.Printf("systray error: no menu item with ID %d\n", id)
 		return
 	}
+
+	if item.parentGroup != nil {
+		select {
+		case item.parentGroup.ClickedCh <- item.groupIdx:
+		default:
+		}
+		item.parentGroup.Check(item.groupIdx)
+	}
+
 	select {
 	case item.ClickedCh <- struct{}{}:
 	// in case no one waiting for the channel
