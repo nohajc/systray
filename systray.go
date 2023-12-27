@@ -72,12 +72,14 @@ type MenuItemRadioGroup struct {
 	ClickedCh  chan int
 	items      []*MenuItem
 	checkedIdx int
+	// parent item, for sub menus
+	parent *MenuItem
 }
 
 func (group *MenuItemRadioGroup) AddItem(title string, tooltip string) *MenuItem {
 	itemIdx := len(group.items)
 
-	item := newMenuItem(title, tooltip, nil)
+	item := newMenuItem(title, tooltip, group.parent)
 	item.isCheckable = true
 	item.checkType = CTRadioButton
 	item.parentGroup = group
@@ -243,6 +245,13 @@ func (item *MenuItem) AddSubMenuItemCheckbox(title string, tooltip string, check
 	child.checked = checked
 	child.update()
 	return child
+}
+
+func (item *MenuItem) AddSubMenuItemRadioGroup() *MenuItemRadioGroup {
+	return &MenuItemRadioGroup{
+		ClickedCh: make(chan int),
+		parent:    item,
+	}
 }
 
 // SetTitle set the text to display on a menu item
