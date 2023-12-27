@@ -34,7 +34,7 @@ var (
 	quitChan = make(chan struct{})
 
 	// instance is the current instance of our DBus tray server
-	instance = &tray{menu: &menuLayout{}, menuVersion: 1}
+	instance = &tray{menu: &menuLayout{}, menuVersion: 3}
 )
 
 // SetTemplateIcon sets the systray icon as a template icon (on macOS), falling back
