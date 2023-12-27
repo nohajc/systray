@@ -218,7 +218,12 @@ func applyItemToLayout(in *MenuItem, out *menuLayout) {
 	out.V1["label"] = dbus.MakeVariant(in.title)
 
 	if in.isCheckable {
-		out.V1["toggle-type"] = dbus.MakeVariant("checkmark")
+		switch in.checkType {
+		case CTNone, CTCheckMark:
+			out.V1["toggle-type"] = dbus.MakeVariant("checkmark")
+		case CTRadioButton:
+			out.V1["toggle-type"] = dbus.MakeVariant("radio")
+		}
 		if in.checked {
 			out.V1["toggle-state"] = dbus.MakeVariant(1)
 		} else {

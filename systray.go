@@ -20,6 +20,12 @@ var (
 	quitOnce  sync.Once
 )
 
+type CheckType int
+
+const CTNone CheckType = 0
+const CTCheckMark CheckType = 1
+const CTRadioButton CheckType = 2
+
 // This helper function allows us to call systrayExit only once,
 // without accidentally calling it twice in the same lifetime.
 func runSystrayExit() {
@@ -51,6 +57,8 @@ type MenuItem struct {
 	checked bool
 	// has the menu item a checkbox (Linux)
 	isCheckable bool
+	// check type (none, checkmark or radio button)
+	checkType CheckType
 	// parent item, for sub menus
 	parent *MenuItem
 }
@@ -150,6 +158,16 @@ func AddMenuItem(title string, tooltip string) *MenuItem {
 func AddMenuItemCheckbox(title string, tooltip string, checked bool) *MenuItem {
 	item := newMenuItem(title, tooltip, nil)
 	item.isCheckable = true
+	item.checkType = CTCheckMark
+	item.checked = checked
+	item.update()
+	return item
+}
+
+func AddMenuItemRadio(title string, tooltip string, checked bool) *MenuItem {
+	item := newMenuItem(title, tooltip, nil)
+	item.isCheckable = true
+	item.checkType = CTRadioButton
 	item.checked = checked
 	item.update()
 	return item
