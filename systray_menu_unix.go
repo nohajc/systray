@@ -131,6 +131,12 @@ func createMenuPropSpec() map[string]map[string]*prop.Prop {
 	defer instance.menuLock.Unlock()
 	return map[string]map[string]*prop.Prop{
 		"com.canonical.dbusmenu": {
+			"Version": {
+				Value:    instance.menuVersion,
+				Writable: true,
+				Emit:     prop.EmitTrue,
+				Callback: nil,
+			},
 			"TextDirection": {
 				Value:    "ltr",
 				Writable: false,
@@ -315,6 +321,12 @@ func refresh() {
 		return
 	}
 	instance.menuVersion++
+	dbusErr := instance.menuProps.Set("com.canonical.dbusmenu", "Version",
+		dbus.MakeVariant(instance.menuVersion))
+	if dbusErr != nil {
+		log.Printf("systray error: failed to update menu version: %v\n", dbusErr)
+		return
+	}
 	err := menu.Emit(instance.conn, &menu.Dbusmenu_LayoutUpdatedSignal{
 		Path: menuPath,
 		Body: &menu.Dbusmenu_LayoutUpdatedSignalBody{
