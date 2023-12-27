@@ -75,13 +75,18 @@ type MenuItemRadioGroup struct {
 }
 
 func (group *MenuItemRadioGroup) AddItem(title string, tooltip string) *MenuItem {
+	itemIdx := len(group.items)
+
 	item := newMenuItem(title, tooltip, nil)
 	item.isCheckable = true
 	item.checkType = CTRadioButton
 	item.parentGroup = group
+	if itemIdx == 0 {
+		// first radio button is checked by default
+		item.checked = true
+	}
 	item.update()
 
-	itemIdx := len(group.items)
 	group.items = append(group.items, item)
 	item.groupIdx = itemIdx
 
@@ -89,7 +94,7 @@ func (group *MenuItemRadioGroup) AddItem(title string, tooltip string) *MenuItem
 }
 
 func (group *MenuItemRadioGroup) Check(idx int) {
-	if idx < 0 || idx >= len(group.items) {
+	if idx < 0 || idx >= len(group.items) || idx == group.checkedIdx {
 		return
 	}
 	group.items[group.checkedIdx].checked = false
@@ -205,7 +210,9 @@ func AddMenuItemCheckbox(title string, tooltip string, checked bool) *MenuItem {
 }
 
 func AddMenuItemRadioGroup() *MenuItemRadioGroup {
-	return &MenuItemRadioGroup{}
+	return &MenuItemRadioGroup{
+		ClickedCh: make(chan int),
+	}
 }
 
 // AddSeparator adds a separator bar to the menu
