@@ -93,8 +93,14 @@ func (group *MenuItemRadioGroup) Check(idx int) {
 		return
 	}
 	group.items[group.checkedIdx].checked = false
+	group.items[group.checkedIdx].update()
+	group.items[idx].checked = true
+	group.items[idx].update()
 	group.checkedIdx = idx
-	group.items[group.checkedIdx].checked = true
+}
+
+func (group *MenuItemRadioGroup) Checked() int {
+	return group.checkedIdx
 }
 
 func (item *MenuItem) String() string {
