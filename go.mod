@@ -1,4 +1,4 @@
-module fyne.io/systray
+module github.com/nohajc/systray
 
 go 1.13
 
