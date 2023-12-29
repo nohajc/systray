@@ -367,6 +367,12 @@ func (t *tray) createPropSpec() map[string]map[string]*prop.Prop {
 				Emit:     prop.EmitTrue,
 				Callback: nil,
 			},
+			"WindowId": {
+				Value:    0,
+				Writable: false,
+				Emit:     prop.EmitTrue,
+				Callback: nil,
+			},
 		}}
 }
 
